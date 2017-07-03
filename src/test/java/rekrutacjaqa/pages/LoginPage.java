@@ -1,4 +1,4 @@
-package pl.xspreview.rekrutacjaqa.pages;
+package rekrutacjaqa.pages;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -41,9 +41,9 @@ public class LoginPage {
         return this;
     }
 
-    public HomePage submitLoginCredentials() {
+    public BoardIndexPage submitLoginCredentials() {
         loginSubmitBtn.click();
-        return new HomePage(driver);
+        return new BoardIndexPage(driver);
     }
 
 }

@@ -1,4 +1,4 @@
-package pl.xspreview.rekrutacjaqa.tests;
+package rekrutacjaqa.tests;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -12,7 +12,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import pl.xspreview.rekrutacjaqa.pages.*;
+import rekrutacjaqa.pages.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,7 +50,7 @@ public class NewTopicTest {
     }
 
     @Test
-    public void logInTest() {
+    public void addNewTopicTest() {
         // Given
         String user = "user20";
         String pass = "6PS2jYvFR";
@@ -59,29 +59,52 @@ public class NewTopicTest {
         String content = "Lorem ipsum dolor sit amet enim";
 
         // When
-        HomePage homePage = loginPage.enterUserLogin(user)
+        BoardIndexPage boardIndexPage = loginPage.enterUserLogin(user)
                 .enterUserPassword(pass)
                 .submitLoginCredentials();
 
-        Assert.assertEquals(user, homePage.getLoggedInUser());
+        Assert.assertEquals(user, boardIndexPage.getLoggedInUser());
 
-        ForumPage forum20Page = homePage.openForum();
-        NewTopicPage newTopicPage = forum20Page.postNewTopic();
-        ViewTopicPage viewTopicPage = newTopicPage.enterSubject(subject)
-                .enterContent(content)
-                .submitTopic();
-        // Then
+        ForumPage forumPage = boardIndexPage.openForum();
+        NewTopicPage newTopicPage = forumPage.postNewTopic();
+
+        newTopicPage.enterSubject(subject)
+                     .enterContent(content);
+
+        newTopicPage.previewTopic();
+
+        ViewTopicPage viewTopicPage = newTopicPage.submitTopic();
+        while (newTopicPage.isInvalidForm()) { // Submit again - sometimes error my be displayed if submitting too fast
+            viewTopicPage = newTopicPage.submitTopic();
+        }
+
         Assert.assertEquals(subject, viewTopicPage.getTopicTitle());
         Assert.assertEquals(content, viewTopicPage.getTopicContent());
-        // Author
-        // TODO
-        // DateTime
-        // TODO
+        Assert.assertTrue(viewTopicPage.checkPostAuthor(user));
+        Assert.assertEquals(1, viewTopicPage.getNumberOfUserPosts());
+
+        String dateTime = viewTopicPage.getTopicDateTime();
+
+        forumPage = viewTopicPage.returnToForum();
+
+        Assert.assertEquals(subject, forumPage.getTopicTitle());
+        Assert.assertEquals(dateTime, forumPage.getLastPostDateTime());
+        Assert.assertTrue(forumPage.getTopicDateTime().contains(dateTime));
+        Assert.assertEquals(1, forumPage.getNumberOfViews());
+
+        boardIndexPage = forumPage.returnToBoardIndex();
+
+        Assert.assertEquals(1, boardIndexPage.getNumberOfTopics());
+        Assert.assertEquals(1, boardIndexPage.getNumberOfPosts());
+
+        forumPage = boardIndexPage.openForum();
+
+        viewTopicPage = forumPage.openTopic();
 
         // Clean
         viewTopicPage.deleteTopic().performPermanentDeletion();
         Assert.assertTrue(driver.findElement(By.tagName("body")).getText().contains("This post has been deleted successfully"));
 
-        Assert.assertTrue(forum20Page.isForumEmpty());
+        Assert.assertTrue(forumPage.isForumEmpty());
     }
 }

@@ -1,4 +1,4 @@
-package pl.xspreview.rekrutacjaqa.pages;
+package rekrutacjaqa.pages;
 
 
 import org.openqa.selenium.WebDriver;
